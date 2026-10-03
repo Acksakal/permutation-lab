@@ -9,14 +9,17 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 :root[data-theme="dark"]{--bg:#0E1620;--panel:#16212D;--ink:#C9D4DE;--mute:#8FA0B2;--line:#2A3A4A;--btn:#1F2D3B;--main:#2B5F5A;--maintx:#C9D4DE;--bl:64%;--hot:#FF7A50;--cell:#0E1620}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:1200px;margin:0 auto;padding:18px 14px 36px}
-h1{margin:0 0 4px;font-size:clamp(22px,4vw,32px)}.sub{color:var(--mute);margin:0 0 14px;max-width:75ch}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
-@media (max-width:860px){.grid{grid-template-columns:1fr}}
+main{max-width:1560px;margin:0 auto;padding:18px 14px 36px}
+h1{margin:0 0 4px;font-size:clamp(22px,4vw,32px);text-align:center}.sub{color:var(--mute);margin:0 auto 14px;max-width:75ch;text-align:center}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:14px;align-items:start}
+.grid.nol{grid-template-columns:minmax(0,1fr) 300px}.grid.nol .lside{display:none}
+.lside.unpin{position:static;max-height:none;overflow:visible}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}.hd h2{margin:0}.hd span{display:flex;gap:6px;flex:none}.hd button{padding:2px 8px;font-size:12px}
+button[aria-pressed=true]{background:var(--main);color:var(--maintx);border-color:var(--main)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
 .card h2{font-size:14px;margin:0 0 8px}
 svg{width:100%;height:auto;display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px}
-.side{position:sticky;top:12px}
+.side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btns .w{grid-column:1/-1}
 button{font:inherit;font-weight:500;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer}
 button.main{background:var(--main);color:var(--maintx);border-color:var(--main)}
@@ -28,23 +31,41 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-of
 .mono{font-family:ui-monospace,Menlo,monospace;font-size:13px}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:3px 4px;text-align:right}th{color:var(--mute);font-weight:500}td:first-child,th:first-child{text-align:left}
 .note{color:var(--mute);font-size:13px;margin:6px 0 0}
-.g{transition:opacity .2s}.e{transition:opacity .2s}
+.g{transition:opacity .6s}.e{transition:opacity .6s}
 .on{stroke-width:3!important;opacity:1!important}
+circle.on{stroke:var(--ink)}
+.card p{margin:6px 0}.card b{color:var(--hot)}.card .mono{display:block}
+@media (max-width:1100px){.grid,.grid.nol{grid-template-columns:1fr}.grid>svg{order:1}.side{order:2;position:static;max-height:none;overflow:visible}.lside{order:3}}
+.nol-head h1,.nol-head .sub{text-align:left}.nol-head .sub{margin:0 0 14px}
+.reveal{position:fixed;left:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.reveal[hidden]{display:none}
 </style></head><body><main>
 <h1>The permute() tree: n = 9, down to depth 3</h1>
 <p class="sub">Every node is one call to <code>permute</code>. The centre is <code>permute(0)</code>. Each ring fixes one more position, and the outer ring is depth 3. All 1 + 9 + 72 + 504 = 586 nodes are real, in the order the swap-based code visits them. Press Play, or hover any node to see its path.</p>
 <div class="grid">
+<button class="reveal main" id="reveal" hidden>Show explanation</button>
+<div class="side lside" id="lside"><div class="card"><div class="hd"><h2>Remove duplicates: why divide by 3!</h2><span><button id="pin" aria-pressed="true" title="Pinned: stays in view while you scroll. Click to let it scroll with the page.">Pinned</button><button id="hide" title="Hide this block to give the tree more room">Hide</button></span></div>
+  <span class="mono">ordered paths: 9!/(9&minus;3)! = 9&middot;8&middot;7 = 504</span>
+  <p>The tree treats 2&rarr;5&rarr;7 and 7&rarr;5&rarr;2 as different paths, but they pick the same set {2,5,7}. A set of 3 values can be ordered 3! = 3&middot;2&middot;1 = 6 ways, so <i>every</i> set appears exactly 6 times among the leaves.</p>
+  <span class="mono">sets: 504 &divide; 3! = 504 &divide; 6 = 84</span>
+  <span class="mono">= 9!/(3!&middot;(9&minus;3)!) = C(9,3)</span>
+  <p class="note">In general, choosing k of n without order: n!/((n&minus;k)!&middot;k!). The button keeps the ascending path (a&lt;b&lt;c) of each set and fades the other 5.</p>
+  <p id="ds"></p><p class="mono" id="dg"></p>
+  <p class="note">For the magic square search, order matters (a row 2 5 7 is not 7 5 2), so that program keeps all orderings. This is the counting behind &ldquo;combinations&rdquo;.</p></div></div>
 <svg id="svg" viewBox="-380 -380 760 760" role="img" aria-label="Radial recursion tree"><g id="E"></g><g id="N"></g></svg>
 <div class="side">
  <div class="card"><div class="btns">
   <button class="main w" id="play">Play</button>
   <button id="step">Step</button><button id="reset">Reset</button>
   <button id="d1">Show depth 1</button><button id="d2">Show depth 2</button>
-  <button class="w" id="all">Show all 586 nodes</button></div>
+  <button class="w" id="all">Show all 586 nodes</button>
+  <button class="w" id="dd">Remove duplicates</button>
+  <button class="w" id="shx">Hide explanation</button></div>
   <div class="spd" style="margin-top:10px">Speed <input type="range" id="spd" min="0" max="100" value="45" aria-label="Speed"><span id="spl" class="mono"></span></div></div>
  <div class="card"><h2 id="ft">Node</h2><div class="mono" id="fp"></div><div class="arr" id="arr"></div>
   <p class="note">Dark cells are fixed (before <code>start</code>). The rest is the array exactly as the code holds it at that call, so the order of the free cells is scrambled by earlier swaps.</p></div>
  <div class="card"><h2>Nodes shown vs. 9!/(9&minus;k)!</h2><table id="tb"></table></div>
+ 
 </div></div></main>
 <script>
 const N=9,D=3,$=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
@@ -59,8 +80,13 @@ function gen(start,parent){
 gen(0,null);
 // ---- radial layout: leaves evenly spaced, parents at the mean of their children
 const R=[0,118,238,352];let leaf=0;const L=nodes.filter(n=>n.d===D).length;
-(function ang(i){const n=nodes[i];if(!n.kids.length){n.a=(leaf++)/L*2*Math.PI;return}
+(function ang(i){const n=nodes[i];if(!n.kids.length){n.li=leaf;n.a=(leaf++)/L*2*Math.PI;return}
   n.kids.forEach(ang);n.a=n.kids.reduce((s,k)=>s+nodes[k].a,0)/n.kids.length})(0);
+// ---- duplicate groups: leaves that pick the same set of 3 values
+const key=n=>n.snap.slice(0,D).sort((a,b)=>a-b).join(','),groups={};
+nodes.forEach(n=>{if(n.d===D)(groups[key(n)]=groups[key(n)]||[]).push(n.id)});
+const asc=n=>{const p=n.snap.slice(0,D);return p.every((v,i)=>!i||p[i-1]<v)},alive=[];
+for(let i=nodes.length-1;i>=0;i--){const n=nodes[i];alive[i]=n.d===D?asc(n):n.kids.some(k=>alive[k])}
 const pos=n=>[R[n.d]*Math.cos(n.a-Math.PI/2),R[n.d]*Math.sin(n.a-Math.PI/2)];
 const branch=n=>{let x=n;while(x.d>1)x=nodes[x.p];return x};
 const col=n=>n.d?`hsl(${(branch(n).v-1)*40} 60% var(--bl))`:'var(--mute)';
@@ -70,20 +96,26 @@ nodes.forEach(n=>{const [x,y]=pos(n);
   const g=mk('g',{opacity:0,class:'g','data-id':n.id},$('N'));n.g=g;
   const r=[20,13,8.5,2.4][n.d];
   const c=mk('circle',{cx:x,cy:y,r,fill:n.d?col(n):'var(--ink)','data-id':n.id},g);
-  if(n.d<3){const t=mk('text',{x,y:y+(n.d?4:3),'text-anchor':'middle','font-size':[8,12,9.5][n.d],fill:'#fff','font-weight':600,'pointer-events':'none'},g);t.textContent=n.d?n.v:'start'}
+  if(n.d<3){const t=mk('text',{x,y:y+(n.d?4:3),'text-anchor':'middle','font-size':[8,12,9.5][n.d],fill:n.d?'#fff':'var(--bg)','font-weight':600,'pointer-events':'none'},g);t.textContent=n.d?n.v:'start'}
   mk('title',{},g).textContent=n.d?'path: '+n.snap.slice(0,n.d).join(' \u2192 '):'permute(0)';
 });
 // ---- state
 const shown=new Array(nodes.length).fill(false);let ptr=0,focus=0,playing=false,prev=[];
-function show(i,on){shown[i]=on;const n=nodes[i];n.g.setAttribute('opacity',on?1:0);if(n.e)n.e.setAttribute('opacity',on?(n.d===3?.55:.8):0)}
+let dd=false;
+function show(i,on){shown[i]=on;const n=nodes[i],dim=dd&&!alive[i];n.g.setAttribute('opacity',on?(dim?.1:1):0);if(n.e)n.e.setAttribute('opacity',on?(dim?.06:n.d===3?.55:.8):0)}
+function grp(n){if(n.d!==D){$('dg').textContent='Hover a depth-3 node to see all 6 orderings of its set.';return}
+  const ids=groups[key(n)];ids.forEach(id=>{if(!shown[id])return;const g=nodes[id].g;g.classList.add('on');g.firstChild.classList.add('on');prev.push(g,g.firstChild)});
+  $('dg').textContent='{'+key(n)+'} : '+ids.map(id=>nodes[id].snap.slice(0,D).join('\u2192')).join('  ')}
 function setFocus(i){prev.forEach(e=>e.classList.remove('on'));prev=[];focus=i;let x=nodes[i];
   while(x){if(shown[x.id]){x.g.firstChild.classList.add('on');prev.push(x.g.firstChild);if(x.e){x.e.classList.add('on');prev.push(x.e)}}x=x.p!==null?nodes[x.p]:null}
-  const n=nodes[i];$('ft').textContent=`permute(start=${n.d})`+(n.d===D?'  (depth limit)':'');
+  const n=nodes[i];grp(n);$('ft').textContent=`permute(start=${n.d})`+(n.d===D?'  (depth limit)':'');
   $('fp').textContent=n.d?'fixed so far: '+n.snap.slice(0,n.d).join(', '):'nothing fixed yet';
   $('arr').innerHTML=n.snap.map((v,k)=>`<div class="${k<n.d?'f':''}">${v}</div>`).join('')}
 function table(){const c=[0,0,0,0],f=[1,9,72,504];nodes.forEach(n=>shown[n.id]&&c[n.d]++);
   $('tb').innerHTML='<tr><th>depth k</th><th>shown</th><th>formula</th></tr>'+f.map((v,k)=>`<tr><td>${k}</td><td>${c[k]}</td><td>${v}${k?` = 9!/${9-k}!`:''}</td></tr>`).join('')+`<tr><th>total</th><th>${c.reduce((a,b)=>a+b)}</th><th>586</th></tr>`}
-function refresh(){table();setFocus(Math.max(0,Math.min(focus,nodes.length-1)))}
+function status(){const c=d=>nodes.filter(n=>n.d===d&&alive[n.id]).length;
+  $('ds').innerHTML=dd?`Kept <b>${c(3)}</b> of 504 (504 &divide; 6). Branches that still reach a kept leaf: depth 1: ${c(1)} of 9, depth 2: ${c(2)} of 72.`:'Not applied yet: all 504 ordered paths count.'}
+function refresh(){table();status();setFocus(Math.max(0,Math.min(focus,nodes.length-1)))}
 function step(){if(ptr>=nodes.length){stop();return}show(ptr,true);focus=ptr;ptr++;refresh();if(ptr>=nodes.length)stop()}
 function stop(){playing=false;$('play').textContent='Play'}
 const sps=()=>Math.pow(10,$('spd').value/40);
@@ -94,8 +126,15 @@ let last=performance.now(),acc=0;
   requestAnimationFrame(loop)})(last);
 $('play').onclick=()=>{if(ptr>=nodes.length)return;playing=!playing;$('play').textContent=playing?'Pause':'Play'};
 $('step').onclick=()=>{stop();step()};
-$('reset').onclick=()=>{stop();nodes.forEach(n=>show(n.id,false));ptr=0;focus=0;show(0,false);refresh()};
+$('reset').onclick=()=>{stop();dd=false;$('dd').textContent='Remove duplicates';nodes.forEach(n=>{n.g.style.transitionDelay='0ms';n.e&&(n.e.style.transitionDelay='0ms')});nodes.forEach(n=>show(n.id,false));ptr=0;focus=0;show(0,false);refresh()};
 const upTo=d=>{stop();nodes.forEach(n=>show(n.id,n.d<=d));ptr=nodes.length;refresh()};
+$('dd').onclick=()=>{stop();if(!dd){dd=true;nodes.forEach(n=>show(n.id,true));ptr=nodes.length}else dd=false;
+  nodes.forEach(n=>{const t=(dd?(n.d===D?n.li*2:1100):0)+'ms';n.g.style.transitionDelay=t;n.e&&(n.e.style.transitionDelay=t);show(n.id,shown[n.id])});
+  $('dd').textContent=dd?'Restore duplicates':'Remove duplicates';refresh()};
+const grid=document.querySelector('.grid');
+function setHidden(h){grid.classList.toggle('nol',h);document.querySelector('main').classList.toggle('nol-head',h);$('reveal').hidden=!h;$('shx').textContent=h?'Show explanation':'Hide explanation'}
+$('hide').onclick=()=>setHidden(true);$('reveal').onclick=()=>setHidden(false);$('shx').onclick=()=>setHidden(!grid.classList.contains('nol'));
+$('pin').onclick=()=>{const on=$('pin').getAttribute('aria-pressed')!=='true';$('pin').setAttribute('aria-pressed',on);$('pin').textContent=on?'Pinned':'Pin';$('lside').classList.toggle('unpin',!on)};
 $('d1').onclick=()=>upTo(1);
 $('d2').onclick=()=>upTo(2);$('all').onclick=()=>upTo(3);
 $('svg').addEventListener('mouseover',e=>{const id=e.target.getAttribute&&e.target.getAttribute('data-id');if(id!==null&&shown[+id])setFocus(+id)});
