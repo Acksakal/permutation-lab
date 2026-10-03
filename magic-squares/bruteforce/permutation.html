@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Permutation Lab: brute-forcing a magic square</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#E8EEF1;--panel:#F8FAFB;--ink:#14213D;--mute:#5A6A7E;--line:#C3CFD7;--hot:#E4572E;--ok:#138A7D;--bad:#C2362B;--hl:#FFE9A8;--hl2:#DCEBF3;--cellfree:#fff;--btn:#D3DDE4;--mainbg:#14213D;--maintx:#F4F7F9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1620;--panel:#16212D;--ink:#E5ECF2;--mute:#8FA0B2;--line:#2A3A4A;--hot:#FF7A50;--ok:#3CC9B8;--bad:#FF6B5E;--hl:#4A3F16;--hl2:#1F3445;--cellfree:#0E1620;--btn:#1F2D3B;--mainbg:#2B5F5A;--maintx:#E5ECF2}}
+:root[data-theme="dark"]{--bg:#0E1620;--panel:#16212D;--ink:#E5ECF2;--mute:#8FA0B2;--line:#2A3A4A;--hot:#FF7A50;--ok:#3CC9B8;--bad:#FF6B5E;--hl:#4A3F16;--hl2:#1F3445;--cellfree:#0E1620;--btn:#1F2D3B;--mainbg:#2B5F5A;--maintx:#E5ECF2}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Bricolage Grotesque",system-ui,sans-serif}
+.mono,code,.code{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+main{max-width:1560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(24px,4vw,36px);line-height:1.1;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--mute);max-width:70ch;margin:0 0 16px}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;font-weight:500;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--mute);filter:brightness(.96)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+button.main{background:var(--mainbg);color:var(--maintx);border-color:var(--mainbg)}
+button:disabled{opacity:.45;cursor:default}
+.bar .main,.spd{grid-column:1/-1}
+.spd{display:flex;align-items:center;gap:8px;color:var(--mute)}
+.spd input{flex:1;min-width:0;accent-color:var(--hot)}
+.spd b{min-width:84px;text-align:right;color:var(--ink);font-weight:500;font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,1.15fr) minmax(250px,.7fr);gap:14px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.codewrap{grid-column:1;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);display:flex;flex-direction:column}
+.codewrap .code{overflow:auto;flex:1;min-height:0}
+.lcol{grid-column:2}
+.side{grid-column:3;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.side>.card:last-child{margin-bottom:0}
+.card h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.say{font-size:18px;min-height:3.1em;line-height:1.4}
+.arr{display:grid;grid-template-columns:repeat(9,1fr);gap:6px}
+.cell{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--ink);border-radius:8px;font:500 clamp(16px,3.2vw,26px) "IBM Plex Mono",monospace;background:var(--cellfree);transition:background .15s,transform .15s}
+.cell.lock{background:var(--ink);color:var(--bg)}
+.cell.sw{background:var(--hot);border-color:var(--hot);color:#fff;transform:translateY(-6px)}
+.idx,.ptr{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;text-align:center;font:12px "IBM Plex Mono",monospace;color:var(--mute)}
+.ptr{min-height:18px;color:var(--hot);font-weight:500;margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--mute);margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border:2px solid var(--ink);border-radius:3px;vertical-align:-1px;margin-right:5px}
+.temp{margin-top:10px;font:13px "IBM Plex Mono",monospace;color:var(--mute)}
+.temp b{color:var(--hot);font-weight:500}
+.two{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+.m3{display:grid;grid-template-columns:repeat(3,44px);gap:4px}
+.m3 div{height:44px;display:grid;place-items:center;border:1.5px solid var(--line);border-radius:6px;font:500 18px "IBM Plex Mono",monospace;background:var(--cellfree)}
+.m3 div.on{background:var(--hl2);border-color:var(--ink)}
+.m3.ok div.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.m3.bad div.on{background:var(--bad);border-color:var(--bad);color:#fff}
+.chk{font:13px/1.5 "IBM Plex Mono",monospace;color:var(--mute)}
+.chk .v{display:block;margin-top:6px;font-weight:500}
+.stack{display:flex;flex-direction:column;gap:4px;max-height:238px;overflow:auto;font:13px "IBM Plex Mono",monospace}
+.fr{padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--cellfree)}
+.fr.top{background:var(--hl2);border-color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px}
+.stats div{font-size:13px;color:var(--mute)}.stats b{display:block;font:500 20px "IBM Plex Mono",monospace;color:var(--ink)}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--ok)}
+.sol{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sol pre{margin:0;padding:6px 10px;border:1px solid var(--ok);border-radius:6px;font:13px/1.35 "IBM Plex Mono",monospace;background:var(--cellfree)}
+.code{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 0;font-size:12.5px;line-height:1.55;overflow:auto}
+.ln{white-space:pre;padding:0 12px 0 8px;border-left:4px solid transparent;min-height:1.55em}
+.ln.cur{background:var(--hl);border-left-color:var(--hot)}
+.ln.call{background:var(--hl2);border-left-color:var(--mute)}
+.note{color:var(--mute);font-size:13px;margin-top:6px}
+@media (prefers-reduced-motion:reduce){.cell{transition:none}}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.lcol,.codewrap,.side{grid-column:1}.side{order:-1;position:static;max-height:none;overflow:visible}.codewrap{order:2;position:static;max-height:none}.codewrap .code{overflow-x:auto}}
+</style>
+</head>
+<body>
+<main>
+<h1>Permutation Lab</h1>
+<p class="sub">Your program tries every ordering of 1&ndash;9 (9! = 362,880 of them) and keeps the ones that form a magic square. Watch <code>permute</code> fix one position at a time, swap, recurse, then swap back to undo.</p>
+
+
+<div class="grid">
+<div class="codewrap">
+<div class="code" id="code"></div>
+</div>
+<div class="lcol">
+  <div class="card"><h2>What just happened</h2><div class="say" id="say"></div></div>
+
+  <div class="card"><h2>The array <code>arr</code> (positions 0&ndash;8)</h2>
+    <div class="arr" id="arr"></div>
+    <div class="idx" id="idx"></div>
+    <div class="ptr" id="ptr"></div>
+    <div class="legend"><span><i style="background:var(--ink)"></i>fixed (before <code>start</code>)</span><span><i style="background:var(--cellfree)"></i>still free to rearrange</span><span><i style="background:var(--hot);border-color:var(--hot)"></i>being swapped</span></div>
+    <div class="temp" id="temp"></div>
+  </div>
+
+  <div class="card"><h2>Is it magic? (<code>is_magic_square</code>)</h2>
+    <div class="two"><div class="m3" id="m3"></div><div class="chk" id="chk"></div></div>
+    <div class="note">Only a complete ordering (start == end) gets checked. The grid is <code>arr</code> read three numbers per row.</div>
+  </div>
+</div>
+
+<div class="side">
+<div class="bar card">
+  <button class="main" id="play">Play</button>
+  <button id="step">Step</button>
+  <button id="leaf">Next permutation</button>
+  <button id="sol">Skip to next solution</button>
+  <button id="reset">Reset</button>
+  <label class="spd">Speed <input type="range" id="spd" min="0" max="100" value="30" aria-label="Speed"><b id="spdl"></b></label>
+</div>
+  <div class="card"><h2>Call stack</h2><div class="stack" id="stack"></div>
+    <div class="note">Each frame fixes one more position. Depth 9 means all positions are fixed.</div></div>
+  <div class="card"><h2>Progress</h2>
+    <div class="stats" id="stats"></div>
+    <div class="prog"><i id="bar"></i></div>
+    <div class="note" id="pct"></div>
+    <div class="sol" id="sols"></div>
+  </div>
+</div>
+</div>
+</main>
+
+<script>
+const CODE=[
+"void swap(int *a, int *b) {",
+"    int temp = *a;",
+"    *a = *b;",
+"    *b = temp;",
+"}",
+"",
+"int is_magic_square(int nums[3][3]) {",
+"    int sum = nums[0][0] + nums[0][1] + nums[0][2];",
+"    for (i = 1; i < 3; i++)",
+"        if (row i sum != sum) return 0;",
+"    for (j = 0; j < 3; j++)",
+"        if (column j sum != sum) return 0;",
+"    if (main diagonal != sum) return 0;",
+"    if (anti-diagonal != sum) return 0;",
+"    return 1;",
+"}",
+"",
+"void permute(int *arr, int start, int end, int *found) {",
+"    if (start == end) {",
+"        /* copy arr into 3x3 nums */",
+"        if (is_magic_square(nums)) {",
+"            *found = 1;  printf(...);",
+"        }",
+"        return;",
+"    }",
+"    for (i = start; i <= end; i++) {",
+"        swap(&arr[start], &arr[i]);",
+"        permute(arr, start + 1, end, found);",
+"        swap(&arr[start], &arr[i]);   /* undo */",
+"    }",
+"}",
+"",
+"int main(void) {",
+"    int digits[9] = {1,2,3,4,5,6,7,8,9};",
+"    permute(digits, 0, 8, &found);",
+"    if (!found) printf(\"No winning combination exists.\\n\");",
+"}"];
+const $=id=>document.getElementById(id);
+const TOTAL=362880;
+let S,gen,playing=false,target=null,last=0,acc=0,lastLine=-2,lastCaller=-2;
+
+// ---- build static DOM
+const codeEl=$('code'),lines=CODE.map(t=>{const d=document.createElement('div');d.className='ln';d.textContent=t||' ';codeEl.appendChild(d);return d});
+const cells=[],ptrs=[],m3=[];
+for(let i=0;i<9;i++){const c=document.createElement('div');c.className='cell';$('arr').appendChild(c);cells.push(c);
+ const x=document.createElement('div');x.textContent=i;$('idx').appendChild(x);
+ const p=document.createElement('div');$('ptr').appendChild(p);ptrs.push(p);
+ const m=document.createElement('div');$('m3').appendChild(m);m3.push(m)}
+
+// ---- the program, as a generator: every `yield` is one visible step
+function set(line,msg,keep){S.line=line;S.msg=msg;if(!keep){S.a=-1;S.b=-1}}
+function* swap(a,b,caller){
+  S.swaps++;S.caller=caller;const A=S.arr;
+  set(0,a===b?`swap(&arr[${a}], &arr[${b}]) swaps a position with itself, so nothing changes.`:`swap(&arr[${a}], &arr[${b}]): exchange ${A[a]} and ${A[b]}.`,1);S.a=a;S.b=b;S.temp=null;yield;
+  S.temp=A[a];set(1,`temp = *a, so temp holds ${S.temp} for safekeeping.`,1);yield;
+  A[a]=A[b];set(2,`*a = *b. Position ${a} now holds ${A[a]}.`,1);yield;
+  A[b]=S.temp;set(3,`*b = temp. Position ${b} now holds ${A[b]}. Swap done.`,1);yield;
+  S.caller=-1;S.temp=null;
+}
+function* magic(){
+  const A=S.arr,tot=(c)=>c.reduce((s,k)=>s+A[k],0),str=(c)=>c.map(k=>A[k]).join(' + ');
+  const sum=tot([0,1,2]);
+  S.check={cells:[0,1,2],text:`row 0: ${str([0,1,2])} = ${sum}`,v:`Target sum = ${sum}`,st:null};
+  set(7,`Row 0 adds to ${sum}. Every other line must match this target.`);yield;
+  const fail=(k,txt)=>{S.fails[k]++;S.check.st='bad';S.check.v=`${txt} Not magic, return 0.`;S.line_ok=false};
+  for(let i=1;i<3;i++){const c=[i*3,i*3+1,i*3+2],s=tot(c);
+    S.check={cells:c,text:`row ${i}: ${str(c)} = ${s}`,v:`Need ${sum}`,st:null};
+    if(s!==sum){fail('row',`${s} \u2260 ${sum}.`);set(9,`Row ${i} adds to ${s}, not ${sum}. return 0: abandon this ordering early.`);yield;return false}
+    set(9,`Row ${i} adds to ${s}. Matches ${sum}.`);yield}
+  for(let j=0;j<3;j++){const c=[j,j+3,j+6],s=tot(c);
+    S.check={cells:c,text:`column ${j}: ${str(c)} = ${s}`,v:`Need ${sum}`,st:null};
+    if(s!==sum){fail('col',`${s} \u2260 ${sum}.`);set(11,`Column ${j} adds to ${s}, not ${sum}. return 0.`);yield;return false}
+    set(11,`Column ${j} adds to ${s}. Matches.`);yield}
+  for(const [c,l,n] of [[[0,4,8],12,'Main diagonal'],[[2,4,6],13,'Anti-diagonal']]){const s=tot(c);
+    S.check={cells:c,text:`${n}: ${str(c)} = ${s}`,v:`Need ${sum}`,st:null};
+    if(s!==sum){fail('diag',`${s} \u2260 ${sum}.`);set(l,`${n} adds to ${s}, not ${sum}. return 0.`);yield;return false}
+    set(l,`${n} adds to ${s}. Matches.`);yield}
+  S.check.st='ok';S.check.v='All 8 lines equal. Magic square!';set(14,'Every row, column and diagonal matches. return 1.');yield;return true;
+}
+function* permute(start){
+  const A=S.arr,fr={start,i:null};S.stack.push(fr);S.calls++;
+  set(17,`permute(start=${start}): positions 0\u2013${start-1<0?'(none)':start-1} are fixed, ${9-start} left to arrange.`);yield;
+  set(18,start===8?`start == end (8 == 8): every position is fixed. We have a full ordering.`:`start == end? ${start} \u2260 8, so keep choosing values for position ${start}.`);yield;
+  if(start===8){
+    S.leaves++;S.check=null;set(19,`Copy arr into the 3\u00d73 grid: ${A.join(' ')}.`);yield;
+    set(20,'Call is_magic_square on that grid.');yield;
+    const ok=yield* magic();
+    if(ok){S.found.push(A.slice());set(21,'Winning combination found! Print it.');yield 'solution'}
+    set(23,'return: backtrack to the caller.');S.stack.pop();yield 'leaf';return;
+  }
+  for(let i=start;i<=8;i++){
+    fr.i=i;set(25,`Loop: i = ${i}. Try the value at position ${i} (${A[i]}) in position ${start}.`);yield;
+    yield* swap(start,i,26);
+    set(27,`Recurse: fix position ${start} as ${A[start]}, then arrange positions ${start+1}\u20138.`);yield;
+    yield* permute(start+1);
+    set(28,`Back from recursion. Undo the swap so arr is restored for the next i.`);yield;
+    yield* swap(start,i,28);
+  }
+  set(30,`Loop finished for start=${start}. Return to the caller.`);S.stack.pop();yield;
+}
+function* main(){
+  set(33,'main: digits = 1 2 3 4 5 6 7 8 9, the first ordering.');yield;
+  set(34,'Start the search: permute(digits, 0, 8, &found).');yield;
+  yield* permute(0);
+  set(35,S.found.length?`Done. All ${TOTAL.toLocaleString()} orderings checked, ${S.found.length} magic squares found.`:'No winning combination exists.');S.done=true;yield 'done';
+}
+function init(){
+  S={arr:[1,2,3,4,5,6,7,8,9],stack:[],a:-1,b:-1,temp:null,caller:-1,check:null,leaves:0,calls:0,swaps:0,found:[],fails:{row:0,col:0,diag:0},msg:'Press Play, or Step to go one line at a time.',line:-1,done:false};
+  gen=main();target=null;playing=false;$('play').textContent='Play';lastLine=-2;render();
+}
+function advance(){if(S.done)return 'done';const r=gen.next();return r.done?'done':r.value}
+
+// ---- rendering
+function render(){
+  const top=S.stack[S.stack.length-1],st=top?top.start:0;
+  $('say').textContent=S.msg;
+  cells.forEach((c,i)=>{c.textContent=S.arr[i];c.className='cell'+(S.stack.length&&i<st?' lock':'')+(i===S.a||i===S.b?' sw':'')});
+  ptrs.forEach((p,i)=>{const t=[];if(top&&i===top.start)t.push('start');if(top&&top.i===i)t.push('i');p.textContent=t.join(',')});
+  $('temp').innerHTML=S.temp!==null?`temp = <b>${S.temp}</b>`:'&nbsp;';
+  m3.forEach((m,i)=>m.textContent=S.arr[i]);
+  const ck=S.check;
+  $('m3').className='m3'+(ck&&ck.st?' '+ck.st:'');
+  m3.forEach((m,i)=>m.classList.toggle('on',!!ck&&ck.cells.includes(i)));
+  $('chk').innerHTML=ck?`${ck.text}<span class="v" style="color:${ck.st==='ok'?'var(--ok)':ck.st==='bad'?'var(--bad)':'var(--ink)'}">${ck.v}</span>`:'Waiting for a full ordering\u2026';
+  $('stack').innerHTML=S.stack.map((f,k)=>`<div class="fr${k===S.stack.length-1?' top':''}">permute(start=${f.start})${f.i!==null?' &middot; i='+f.i:''}</div>`).reverse().join('')||'<div class="fr">(empty)</div>';
+  const f=S.fails;
+  $('stats').innerHTML=[['Orderings checked',S.leaves.toLocaleString()],['Magic squares',S.found.length],['permute() calls',S.calls.toLocaleString()],['swap() calls',S.swaps.toLocaleString()],['Failed on a row',f.row.toLocaleString()],['Failed on col/diagonal',(f.col+f.diag).toLocaleString()]].map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join('');
+  $('bar').style.width=(S.leaves/TOTAL*100)+'%';
+  $('pct').textContent=`${(S.leaves/TOTAL*100).toFixed(2)}% of ${TOTAL.toLocaleString()} orderings`;
+  if($('sols').childElementCount!==S.found.length){$('sols').innerHTML=S.found.map(a=>`<pre>${[0,3,6].map(r=>a.slice(r,r+3).join(' ')).join('\n')}</pre>`).join('')}
+  if(S.line!==lastLine||S.caller!==lastCaller){
+    lines.forEach((l,i)=>l.className='ln'+(i===S.line?' cur':i===S.caller?' call':''));
+    if(S.line>=0&&playing===false||(S.line!==lastLine&&speedSps()<12)){const l=lines[S.line];if(l){const r=l.getBoundingClientRect(),h=innerHeight;if(r.top<0||r.bottom>h)l.scrollIntoView({block:'center',behavior:'auto'})}}
+    lastLine=S.line;lastCaller=S.caller}
+  $('play').disabled=$('step').disabled=$('leaf').disabled=$('sol').disabled=S.done;
+}
+function speedSps(){return Math.pow(10,$('spd').value/25)}
+function labelSpeed(){const s=speedSps();$('spdl').textContent=s<10?s.toFixed(1)+' steps/s':s<1000?Math.round(s)+' steps/s':'turbo'}
+
+// ---- loop
+function frame(t){
+  const dt=Math.min(.1,(t-last)/1000||0);last=t;
+  if(target){const end=performance.now()+12;let r;do{r=advance()}while(r!==target&&r!=='done'&&performance.now()<end);
+    if(r===target||r==='done'){target=null;playing=false;$('play').textContent='Play'}render()}
+  else if(playing){const sps=speedSps();acc+=sps*dt;let n=Math.floor(acc);acc-=n;
+    const end=performance.now()+12;while(n-->0){if(advance()==='done'){playing=false;$('play').textContent='Play';break}if(performance.now()>end)break}render()}
+  requestAnimationFrame(frame);
+}
+$('play').onclick=()=>{playing=!playing;target=null;$('play').textContent=playing?'Pause':'Play'};
+$('step').onclick=()=>{playing=false;target=null;$('play').textContent='Play';advance();render()};
+$('leaf').onclick=()=>{target='leaf';playing=false};
+$('sol').onclick=()=>{target='solution';playing=false};
+$('reset').onclick=init;
+$('spd').oninput=labelSpeed;
+labelSpeed();init();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
