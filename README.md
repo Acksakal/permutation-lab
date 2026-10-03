@@ -38,8 +38,6 @@ cc magic_square.c -std=c90
 ./a.out
 ```
 
-Without `-o` the compiler writes `a.out` into the current folder. Each program has its own folder, so the two builds don't overwrite each other. Add `a.out` to `.gitignore` so the binaries stay out of the repo.
-
 The brute-force program prints 8 grids, each with sum 15. The construction program prints one 3×3, one 4×4 and one 6×6 square.
 
 ---
@@ -93,8 +91,6 @@ The number of tree nodes at depth *k* is 9!/(9−*k*)!, and the leaves dominate.
 - counters and every solution found
 
 Controls: Play/Pause, Step, Next permutation, Skip to next solution, Reset, and a speed slider up to turbo. Tip: step slowly through the first few orderings and watch position 8 change first, then 7, then 6, as the recursion unwinds.
-
-To host it, enable GitHub Pages for the repo and rename the file to `index.html`. It will then be served at `/magic-squares/bruteforce/` under your Pages URL.
 
 ---
 
