@@ -14,6 +14,7 @@ permutation-lab/
     ├── bruteforce/
     │   ├── magic_square.c
     │   └── permutation.html
+    │   └── tree_n_9_depth_3.html
     └── construction/
         └── magic_square.c
 ```
