@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Singly even magic square: the math</title>
+<style>
+:root{--bg:#E8EEF1;--panel:#F8FAFB;--ink:#14213D;--mute:#5A6A7E;--line:#C3CFD7;--btn:#D3DDE4;--main:#14213D;--maintx:#F4F7F9;--hot:#D9480F;--ok:#138A7D;--cell:#fff;--hl:#FFE9A8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1620;--panel:#16212D;--ink:#C9D4DE;--mute:#8FA0B2;--line:#2A3A4A;--btn:#1F2D3B;--main:#2B5F5A;--maintx:#C9D4DE;--hot:#FF8A5C;--ok:#3CC9B8;--cell:#0E1620;--hl:#4A3F16}}
+:root[data-theme="dark"]{--bg:#0E1620;--panel:#16212D;--ink:#C9D4DE;--mute:#8FA0B2;--line:#2A3A4A;--btn:#1F2D3B;--main:#2B5F5A;--maintx:#C9D4DE;--hot:#FF8A5C;--ok:#3CC9B8;--cell:#0E1620;--hl:#4A3F16}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1280px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:clamp(22px,3.5vw,30px);margin:0 0 4px}.sub{color:var(--mute);margin:0 0 14px;max-width:80ch}
+.lay{display:grid;grid-template-columns:minmax(340px,480px) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.lay{grid-template-columns:1fr}.left{position:static!important}}
+.left{position:sticky;top:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.mono,code,.eq,.code{font-family:ui-monospace,Menlo,Consolas,monospace}
+#grid{display:grid;gap:3px;font-size:13px}
+.lab{display:grid;place-items:center;color:var(--mute);font-size:11px}
+.c{position:relative;aspect-ratio:1;display:grid;place-items:center;border:1.5px solid var(--line);border-radius:5px;font:500 13px ui-monospace,Menlo,monospace;transition:background .2s,transform .2s}
+.c[data-was]::after{content:attr(data-was);position:absolute;top:0;right:3px;font-size:9px;color:var(--mute);text-decoration:line-through}
+.A{background:rgba(60,140,200,.25)}.B{background:rgba(70,180,110,.25)}.C{background:rgba(230,160,40,.28)}.D{background:rgba(200,90,150,.25)}
+.blank{color:transparent;background:transparent;border-style:dashed}
+.ln{background:var(--hl)!important;border-color:var(--hot)}
+.hot{outline:3px solid var(--hot);outline-offset:-1px;font-weight:700}
+.sL{box-shadow:inset 0 0 0 3px #2F80ED}.sM{box-shadow:inset 0 0 0 3px #9B51E0}.sR{box-shadow:inset 0 0 0 3px #EB5757}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+button{font:inherit;font-weight:500;color:var(--ink);background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+button.main,button[aria-pressed=true]{background:var(--main);color:var(--maintx);border-color:var(--main)}
+button:disabled{opacity:.4}button:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+.stat{min-height:3em;color:var(--mute);font-size:13px;margin-top:8px}
+.nm{display:inline-block;background:var(--main);color:var(--maintx);border-radius:12px;padding:1px 10px;font-size:12px;margin-left:6px;vertical-align:middle}
+h2{font-size:19px;margin:0 0 8px}
+.eq{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--bg);border-left:4px solid var(--ok);border-radius:6px;padding:6px 10px;margin:6px 0;font-size:14px}
+.eq em{color:var(--ok);font-style:normal;font-size:12px}.eq.bad{border-color:var(--hot)}.eq.bad em{color:var(--hot)}
+.why{color:var(--mute);font-size:14px;margin:6px 0}
+.code{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 0;font-size:12.5px;overflow:auto}
+.cl{white-space:pre;padding:0 12px;border-left:4px solid transparent;min-height:1.5em}.cl.on{background:var(--hl);border-left-color:var(--hot)}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left}
+.dots{color:var(--mute);font-size:13px;margin:8px 0 0}
+</style></head><body><main>
+<h1>Singly even magic squares: the math behind <code>solve_singly_even</code></h1>
+<p class="sub">Step through the derivation for n = 6 or n = 10. The grid shows each idea, the right side shows the formula and its name, and the code highlights the lines that implement it. Hover any cell to see its <code>i</code> and <code>j</code>.</p>
+<div class="lay">
+<div class="left"><div class="card"><div id="grid"></div><div class="stat" id="stat">Hover a cell.</div>
+<div class="btns"><button id="prev">&larr; Back</button><button class="main" id="next">Next &rarr;</button><span style="flex:1"></span><button id="n6" aria-pressed="true">n = 6</button><button id="n10" aria-pressed="false">n = 10</button></div>
+<div class="dots" id="dots"></div></div></div>
+<div><div class="card"><h2><span id="t"></span><span class="nm" id="term"></span></h2><div id="body"></div></div>
+<div class="code" id="code"></div></div></div></main>
+<script>
+const $=id=>document.getElementById(id);
+const CODE=[["void solve_singly_even(int **grid, int n) {",""],["    int k = n / 2;","k"],["    int sub_grid_size = k * k;","q"],["    int **sub;  int i, j, temp;",""],["    int shift = (k - 1) / 2;","shift"],["",""],["    solve_odd(sub, k);          /* 1. odd k x k square S */","sub"],["",""],["    for (i = 0; i < k; i++) {    /* 2. copy with offsets */","copy"],["        for (j = 0; j < k; j++) {","copy"],["            grid[i][j]         = sub[i][j];","A"],["            grid[i + k][j + k] = sub[i][j] + sub_grid_size;","B"],["            grid[i][j + k]     = sub[i][j] + 2 * sub_grid_size;","C"],["            grid[i + k][j]     = sub[i][j] + 3 * sub_grid_size;","D"],["        }  }","copy"],["",""],["    for (i = 0; i < k; i++) {    /* 3. swap A and D */","L M"],["        for (j = 0; j < shift; j++) {","L M"],["            if (i == shift) {          /* middle row */","M"],["                temp = grid[i][j + 1];","M"],["                grid[i][j + 1] = grid[i + k][j + 1];","M"],["                grid[i + k][j + 1] = temp;","M"],["            } else {","M"],["                temp = grid[i][j];","L"],["                grid[i][j] = grid[i + k][j];","L"],["                grid[i + k][j] = temp;","L"],["            }  }  }","M"],["",""],["    for (i = 0; i < k; i++) {    /* 4. swap C and B */","R"],["        for (j = n - (shift - 1); j < n; j++) {","R"],["            temp = grid[i][j];","R"],["            grid[i][j] = grid[i + k][j];","R"],["            grid[i + k][j] = temp;","R"],["        }  }","R"],["}   /* free() lines omitted */",""]];
+function odd(m){const g=Array.from({length:m},()=>Array(m).fill(0));let r=0,c=(m-1)/2;for(let v=1;v<=m*m;v++){g[r][c]=v;const i=(r-1+m)%m,j=(c+1)%m;if(g[i][j]){r=(r+1)%m}else{r=i;c=j}}return g}
+function ctx(n){const k=n/2,q=k*k,s=k*(k*k+1)/2,T=k*(4*q+1),a=(k-1)/2,b=(k-3)/2,S=odd(k),g=Array.from({length:n},()=>Array(n).fill(0));
+ for(let i=0;i<k;i++)for(let j=0;j<k;j++){g[i][j]=S[i][j];g[i+k][j+k]=S[i][j]+q;g[i][j+k]=S[i][j]+2*q;g[i+k][j]=S[i][j]+3*q}
+ return{n,k,q,s,T,a,b,S,pre:g}}
+function swaps(c,plain){const L=[];for(let i=0;i<c.k;i++)for(let j=0;j<c.a;j++){const m=i===c.a&&!plain;L.push([i,m?j+1:j,m?'M':'L'])}
+ for(let i=0;i<c.k;i++)for(let j=c.n-(c.a-1);j<c.n;j++)L.push([i,j,'R']);return L}
+function apply(c,L,u){const g=c.pre.map(r=>r.slice());L.slice(0,u).forEach(([i,j])=>{const t=g[i][j];g[i][j]=g[i+c.k][j];g[i+c.k][j]=t});return g}
+function sums(g){const n=g.length,R=g.map(r=>r.reduce((x,y)=>x+y,0)),Cc=[...Array(n).keys()].map(j=>g.reduce((x,r)=>x+r[j],0));let d1=0,d2=0;for(let i=0;i<n;i++){d1+=g[i][i];d2+=g[i][n-1-i]}return{R,C:Cc,d1,d2}}
+const E=(f,nm,bad)=>`<div class="eq${bad?' bad':''}"><span>${f}</span><em>${nm||''}</em></div>`;
+const W=t=>`<p class="why">${t}</p>`;
+let n=6,c=ctx(6),step=0,sel='top',pickT='all',run=0,timer=null,ap=false;
+const wasOf=(c,L)=>{const m={};L.forEach(([i,j])=>{m[key(i,j)]=c.pre[i][j];m[key(i+c.k,j)]=c.pre[i+c.k][j]});return m};
+const LF=()=>swaps(c).filter(x=>pickT==='all'||x[2]===pickT);
+const ba=()=>`<div class="btns" style="margin:0 0 8px"><button onclick="ap=!ap;render()" aria-pressed="${ap}">${ap?'Showing the grid AFTER the swaps (click for before)':'Showing the grid BEFORE the swaps (click to apply them)'}</button></div>`;
+const key=(i,j)=>i+','+j;
+function marks(L,only){const m={};L.forEach(([i,j,t])=>{if(only&&only!=='all'&&only!==t)return;m[key(i,j)]=(m[key(i,j)]||'')+' s'+t;m[key(i+c.k,j)]=(m[key(i+c.k,j)]||'')+' s'+t});return m}
+function line(t){const{n,k}=c,o=[];if(t==='top')for(let j=0;j<n;j++)o.push([0,j]);if(t==='bot')for(let j=0;j<n;j++)o.push([k,j]);if(t==='col')for(let i=0;i<n;i++)o.push([i,0]);if(t==='main')for(let i=0;i<n;i++)o.push([i,i]);if(t==='anti')for(let i=0;i<n;i++)o.push([i,n-1-i]);return o}
+const STEPS=[
+c=>({t:'1. The target sum',term:'magic constant T',code:'',g:{g:Array.from({length:c.n},(_,i)=>Array.from({length:c.n},(_,j)=>i*c.n+j+1)),cls:{}},
+ h:W(`The grid uses each of 1…N once, where N = n² = ${c.n*c.n}. Every row, column and diagonal must reach the same sum T.`)+E(`1 + 2 + … + N = N(N+1)/2 = ${c.n*c.n*(c.n*c.n+1)/2}`,'sum of the first N numbers')+E(`n rows share it equally: T = total / n = n(n²+1)/2 = ${c.n*(c.n*c.n+1)/2}`,'magic constant')+E(`n = 2k, so T = k(4k²+1) = ${c.k}·${4*c.q+1} = ${c.T}`,`k = ${c.k}, rewritten in k`)+W(`We use k = n/2 because the construction is built from k×k pieces. Singly even means n = 2k with k odd (n = 6, 10, 14, …).`)}),
+c=>{const g=c.pre.map((r,i)=>r.map((v,j)=>i<c.k&&j<c.k?v:0));return{t:'2. Build one odd square S',term:'Siamese method',code:'k sub',g:{g,cls:{}},
+ h:W(`The k×k = ${c.k}×${c.k} square in the corner is S, made by <code>solve_odd(sub, k)</code> (the Siamese method from earlier). It is magic, so every line adds up to s.`)+E(`s = k(k²+1)/2 = ${c.k}·${c.k*c.k+1}/2 = ${c.s}`,'line sum of S')+E(`k = n/2 = ${c.k}`,'code: int k = n / 2')+W(`S is the only square we know how to make perfectly. The plan is to reuse it four times and then repair the damage.`)}},
+c=>({t:'3. Four shifted copies',term:'quadrants A, B, C, D',code:'q copy A B C D',g:{g:c.pre,cls:{}},
+ h:W(`Each quadrant is S with a constant added to every cell. The constant is a multiple of q = k² = ${c.q}, the number of cells in S.`)+E(`A = S     B = S + q     C = S + 2q     D = S + 3q`,'cell by cell')+E(`line sum of a quadrant = s + (added constant)·k`,'k cells in a line each gain the constant')+W(`Careful: "S + q" adds q to <b>every cell</b>, so a line gains q·k, not q. Example: in B a line adds up to ${c.s} + ${c.q}·${c.k} = ${c.s+c.q*c.k}.`)}),
+c=>{const p=sums(c.pre),T=c.T,v={top:[p.R[0],`2s + 2qk`],bot:[p.R[c.k],`2s + 4qk`],col:[p.C[0],`2s + 3qk`],main:[p.d1,`2s + qk`],anti:[p.d2,`2s + 5qk`]},nmz={top:'a top row (A + C)',bot:'a bottom row (D + B)',col:'a column (A + D)',main:'main diagonal (A + B)',anti:'anti-diagonal (C + D)'};
+ const cls={};line(sel).forEach(([i,j])=>cls[key(i,j)]=' ln');const[x,f]=v[sel];
+ return{t:'4. Measure the errors',term:'error = T − actual',code:'',g:{g:c.pre,cls},
+ h:W(`A line crosses two quadrants, so its sum is the sum of two quadrant terms. Pick a line:`)+`<div class="btns">${Object.keys(nmz).map(k=>`<button onclick="sel='${k}';render()" aria-pressed="${k===sel}">${nmz[k].split(' (')[0]}</button>`).join('')}</div>`+E(`${nmz[sel]}: ${f} = ${x}`,'sum of its two pieces')+E(`error = T − sum = ${T} − ${x} = ${T-x>0?'+':''}${T-x}`,T-x===0?'already perfect':'needs this change',T-x!==0)+W(`Use 2s = qk + k and T = 4qk + k, with qk = ${c.q*c.k}. Result: top rows short by qk = ${c.q*c.k}, bottom rows over by qk, columns perfect, main diagonal short by 2qk = ${2*c.q*c.k}, anti-diagonal over by 2qk. Columns need nothing, so the fix must not touch column sums.`)}},
+c=>{const{k,q,pre,n}=c,cls={};[[0,0],[k,0],[0,n-1],[k,n-1]].forEach(([i,j])=>cls[key(i,j)]=' hot');
+ return{t:'5. The repair tool: swap down a column',term:'column swap',code:'',g:{g:pre,cls},
+ h:W(`Swap a cell with the cell k rows below it. Both are in the same column, so <b>no column sum changes</b>. The row sums do change, by a known amount.`)+E(`A↔D: ${pre[0][0]} ↔ ${pre[k][0]}   D − A = 3q = ${3*q}`,'top row gains')+E(`C↔B: ${pre[0][n-1]} ↔ ${pre[k][n-1]}   B − C = −q = −${q}`,'top row changes')+W(`D = S + 3q and A = S at the same position, so they differ by exactly 3q wherever you look. Same for C and B. That is why the effect of a swap is predictable. The bottom row changes by the opposite amount.`)}},
+c=>({t:'6. Equation 1: the rows',term:'row equation',code:'L M R',g:{g:c.pre,cls:Object.fromEntries(line('top').map(([i,j])=>[key(i,j),' ln']))},
+ h:W(`A top row is short by qk = ${c.q*c.k}. Let a = swaps of type A↔D in each row and b = swaps of type C↔B.`)+E(`+3q·a − q·b = qk`,'change must equal the gap')+E(`3a − b = k`,'Equation 1 (divide by q)')+W(`k = ${c.k}: ${c.k===3?'a = 1, b = 0 works (3 − 0 = 3)':'a = 2, b = 1 works (6 − 1 = 5), but so would a = 3, b = 4 …'}. Equation 1 alone has many solutions. The diagonals pick one.`)}),
+c=>{const g=apply(c,swaps(c,true),99),p=sums(g),cls={};line('main').forEach(([i,j])=>cls[key(i,j)]=' ln');
+ return{t:'7. Equation 2: the diagonals',term:'diagonal equation',code:'',g:{g,cls},
+ h:W(`The main diagonal is short by 2qk = ${2*c.q*c.k}. Only swapped cells that sit <b>on</b> the diagonal change it: +3q for a cell in A, +q for a cell in B. Let x, y count them.`)+E(`3q·x + q·y = 2qk`,'diagonal must gain 2qk')+E(`3x + y = 2k`,'Equation 2')+W(`Simplest plan (grid shown): swap the same leftmost a columns and rightmost b columns in every row. The diagonal meets a swapped cell in A for rows 0…a−1, so x = a, and y = b.`)+E(`3a + b = 2k   and   3a − b = k`,'both must hold')+E(`add them: 6a = 3k → a = k/2 = ${c.k/2}`,'not a whole number!',true)+W(`k is odd, so this plan cannot work. The grid shows it: with a = ${c.a}, b = ${c.b} the main diagonal is ${p.d1} instead of ${c.T} (short by ${c.T-p.d1} = 3q), the anti-diagonal ${p.d2}.`)}},
+c=>{const L=swaps(c),cls=marks(L);cls[key(c.a,c.a)]=(cls[key(c.a,c.a)]||'')+' hot';cls[key(c.a+c.k,c.a)]=(cls[key(c.a+c.k,c.a)]||'')+' hot';
+ return{t:'8. The shift fixes it',term:'middle-row shift',code:'M shift',g:{g:ap?apply(c,L):c.pre,cls,was:ap?wasOf(c,L):{}},
+ h:ba()+W(`We are exactly one swap's worth (3q) short on each diagonal. The centre cell of A, at (a, a) = (${c.a}, ${c.a}), is on the main diagonal. The cell below it in D is on the anti-diagonal. Swapping that one column fixes <b>both</b> diagonals.`)+W(`The middle row must still have exactly a swaps (Equation 1), so drop column 0, which is on no diagonal, and take column a instead: columns 1…a rather than 0…a−1. That is <code>j + 1</code> in the code.`)+E(`x = a + 1 → 3(a+1) + b = 2k`,'Equation 2 with the shift')+E(`add Equation 1: 6a + 3 = 3k`,'')+E(`a = (k − 1)/2 = ${c.a}     b = 3a − k = (k − 3)/2 = ${c.b}`,'solution')+W(`In general x = a + σ with σ ∈ {0, 1}; adding gives 2a + σ = k. k is odd, so σ must be 1. <b>The parity of k forces the shift.</b>`)}},
+c=>{const L=swaps(c),cls=marks(L,pickT),b=(t,l)=>`<button onclick="pickT='${t}';render()" aria-pressed="${pickT===t}">${l}</button>`,cols=(f,t)=>t<f?'none':[...Array(t-f+1).keys()].map(x=>x+f).join(', ');
+ return{t:'9. Map to the C code',term:'i, j and shift',code:pickT==='all'?'shift L M R':pickT,g:{g:ap?apply(c,LF()):c.pre,cls,was:ap?wasOf(c,LF()):{}},
+ h:ba()+W(`Rows are <code>i</code>, columns are <code>j</code>. <code>i</code> runs over the top half (0…k−1); its partner is row <code>i + k</code>.`)+`<div class="btns">${b('all','All')}${b('L','Left swaps')}${b('M','Middle row')}${b('R','Right swaps')}</div>`+E(`shift = (k−1)/2 = ${c.a}  = a`,'code: int shift')+E(`L: j = 0…shift−1 → columns ${cols(0,c.a-1)}`,'blue: a columns, all rows except i = shift')+E(`M: i = shift = ${c.a}, columns j+1 → ${cols(1,c.a)}`,'purple: still a swaps, now with the centre')+E(`R: j = n−(shift−1)…n−1 → columns ${cols(c.n-(c.a-1),c.n-1)}`,'red: b = shift − 1 = '+c.b+' columns')+W(`Why n − (shift − 1)? The loop must run b = shift − 1 times and end at column n − 1, so it starts at n − b. For n = 6, shift − 1 = 0: the loop is empty.`)}},
+c=>{const L=swaps(c),g=apply(c,L,run),cls=marks(L.slice(0,run)),p=sums(g),T=c.T,ok=x=>x===T?'ok':'x';
+ let lg='Nothing swapped yet.';if(run>0){const[i,j]=L[run-1];cls[key(i,j)]+=' hot';cls[key(i+c.k,j)]+=' hot';lg=`swap ${run}: (i=${i}, j=${j}) ↔ (i=${i+c.k}, j=${j}): ${c.pre[i][j]} ↔ ${c.pre[i+c.k][j]}`}
+ return{t:'10. Run the swaps',term:'all lines = T',code:run>0?L[run-1][2]:'',g:{g,cls,was:wasOf(c,L.slice(0,run))},
+ h:W(`Each press applies the next swap from the code. Swapped cells show their new value, with the old value struck through in the corner (${L.length} swaps for n = ${c.n}) and recomputes every line.`)+`<div class="btns"><button onclick="stepRun()">Next swap</button><button onclick="auto()">Play</button><button onclick="run=0;stop();render()">Reset</button></div>`+E(lg,'last swap')+`<table><tr><th>line</th><th>sums</th></tr><tr><td>rows</td><td>${p.R.map(x=>`<b style="color:var(--${x===T?'ok':'hot'})">${x}</b>`).join(' ')}</td></tr><tr><td>columns</td><td>${p.C.map(x=>`<b style="color:var(--${x===T?'ok':'hot'})">${x}</b>`).join(' ')}</td></tr><tr><td>diagonals</td><td>${[p.d1,p.d2].map(x=>`<b style="color:var(--${x===T?'ok':'hot'})">${x}</b>`).join(' ')}</td></tr></table>`+W(`Target T = ${T}. Green means a line is correct. Columns stay green the whole time because every swap stays inside one column.`)+(run===L.length?E(`all ${2*c.n+2} lines = ${T}`,'magic square!'):'')}}];
+function stepRun(){const m=swaps(c).length;if(run<m)run++;else stop();render()}
+function auto(){stop();timer=setInterval(()=>{if(run>=swaps(c).length){stop();return}stepRun()},450)}
+function stop(){clearInterval(timer);timer=null}
+function drawGrid(g,cls,was){was=was||{};const el=$('grid'),n=g.length,k=n/2;el.style.gridTemplateColumns=`22px repeat(${n},1fr)`;let h='<div></div>'+[...Array(n).keys()].map(j=>`<div class="lab">j${j}</div>`).join('');
+ g.forEach((r,i)=>{h+=`<div class="lab">i${i}</div>`+r.map((v,j)=>`<div class="c ${i<k?(j<k?'A':'C'):(j<k?'D':'B')}${v?'':' blank'}${cls[key(i,j)]||''}" data-i="${i}" data-j="${j}"${was[key(i,j)]!==undefined&&was[key(i,j)]!==v?` data-was="${was[key(i,j)]}"`:''}>${v||'·'}</div>`).join('')});el.innerHTML=h}
+function render(){const s=STEPS[step](c);$('t').textContent=s.t;$('term').textContent=s.term;$('body').innerHTML=s.h;drawGrid(s.g.g,s.g.cls,s.g.was);
+ const tg=s.code.split(' ');$('code').innerHTML=CODE.map(([t,g])=>`<div class="cl${g&&g.split(' ').some(x=>tg.includes(x))?' on':''}">${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')||' '}</div>`).join('');
+ $('prev').disabled=step===0;$('next').disabled=step===STEPS.length-1;$('dots').textContent=`Step ${step+1} of ${STEPS.length}`}
+function role(i,j){const{k,a,n}=c,q=i<k?(j<k?'A':'C'):(j<k?'D':'B'),r=i%k;let x='';
+ const L=swaps(c);const m=L.find(([ii,jj])=>jj===j&&(ii===i||ii+k===i));if(m)x=m[2]==='L'?`left swap: j = ${j} < shift = ${a}`:m[2]==='M'?`middle row (i = shift), shifted column j+1 = ${j}`:`right swap: j = ${j} ≥ n−(shift−1) = ${n-(a-1)}`;
+ return`(i=${i}, j=${j}) quadrant ${q}, value ${c.pre[i][j]} (S cell ${c.S[r][j%k]} + ${({A:0,B:1,C:2,D:3})[q]}q). ${x?'Swapped with row '+(i<k?i+k:i-k)+': '+x+'.':'Not swapped.'}`}
+$('grid').addEventListener('mouseover',e=>{const t=e.target;if(t.dataset&&t.dataset.i!==undefined)$('stat').textContent=role(+t.dataset.i,+t.dataset.j)});
+$('next').onclick=()=>{stop();step++;render()};$('prev').onclick=()=>{stop();step--;render()};
+function setN(v){n=v;c=ctx(v);run=0;stop();$('n6').setAttribute('aria-pressed',v===6);$('n10').setAttribute('aria-pressed',v===10);render()}
+$('n6').onclick=()=>setN(6);$('n10').onclick=()=>setN(10);render();
+</script></body></html>
